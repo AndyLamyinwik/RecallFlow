@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}RecallFlow{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/styles.css') }}">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="wordmark" href="/">RecallFlow</a>
+      {% if signed_in %}
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="/items">Saved items</a>
+        <a class="button button-small" href="/items/new">Save article</a>
+        <form method="post" action="/session/logout">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button class="link-button" type="submit">Sign out</button>
+        </form>
+      </nav>
+      {% endif %}
+    </header>
+    <main class="page-shell">
+      {% block content %}{% endblock %}
+    </main>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

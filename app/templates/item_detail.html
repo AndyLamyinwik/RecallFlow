@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}{{ item.title }} — RecallFlow{% endblock %}
+
+{% block content %}
+<section class="content-section narrow-section">
+  <a class="back-link" href="/items">← Saved items</a>
+  {% if notice %}<p class="message message-success" role="status">{{ notice }}</p>{% endif %}
+  {% if error %}<p class="message message-error" role="alert">{{ error }}</p>{% endif %}
+
+  <article class="detail-card">
+    <p class="item-domain">{{ item.source_domain }}</p>
+    <h1 class="detail-title">{{ item.title }}</h1>
+    {% if item.source_excerpt %}<p class="excerpt">{{ item.source_excerpt }}</p>{% endif %}
+    <dl class="facts">
+      <div><dt>Intent</dt><dd>{{ item.intent|lower|title }}</dd></div>
+      <div><dt>Reading effort</dt><dd>{{ item.effort_band|lower|title }} <span class="provisional">v1 estimate</span></dd></div>
+      <div><dt>Extraction</dt><dd>{{ item.extraction_status|lower|replace('_', ' ')|title }}</dd></div>
+      <div><dt>Saved</dt><dd>{{ item.saved_at.date() }}</dd></div>
+    </dl>
+    {% if item.why_saved_note %}
+    <div class="saved-note"><strong>Your note</strong><p>{{ item.why_saved_note }}</p></div>
+    {% endif %}
+    <a class="text-link" href="{{ item.source_url }}" target="_blank" rel="noopener noreferrer">Visit original source ↗</a>
+  </article>
+
+  {% if item.status == "ACTIVE" and not active_resurfacing %}
+  <section class="settings-card" aria-labelledby="date-heading">
+    <h2 id="date-heading">Revisit date</h2>
+    <form method="post" action="/items/{{ item.id }}/date" class="inline-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="hidden" name="expected_updated_at" value="{{ item.updated_at.isoformat() }}">
+      <label class="sr-only" for="revisit-on">Revisit date</label>
+      <input id="revisit-on" name="revisit_on" type="date" min="{{ minimum_date }}" value="{{ item.next_due_on or minimum_date }}" required>
+      <button class="button" type="submit">Update date</button>
+    </form>
+  </section>
+  {% elif item.status == "DISMISSED" %}
+  <section class="settings-card" aria-labelledby="date-heading">
+    <h2 id="date-heading">Revisit date</h2>
+    <p>This item is dismissed and will not return. Its date cannot be changed.</p>
+  </section>
+  {% else %}
+  <section class="settings-card" aria-labelledby="date-heading">
+    <h2 id="date-heading">Revisit date</h2>
+    <p>This date is temporarily locked while the resurfacing card is awaiting an Open, Later, or Dismiss decision.</p>
+  </section>
+  {% endif %}
+
+  <section class="danger-zone" aria-labelledby="delete-heading">
+    <h2 id="delete-heading">Delete saved item</h2>
+    <p>This permanently removes the URL, private article snapshot, note, and item-linked records.</p>
+    <form method="post" action="/items/{{ item.id }}/delete">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button class="button button-danger" type="submit">Delete permanently</button>
+    </form>
+  </section>
+</section>
+{% endblock %}

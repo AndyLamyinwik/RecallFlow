@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}RecallFlow — Saved knowledge, returned gently{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">A quiet place for useful reading</p>
+  <h1>Save now. Decide later.</h1>
+  <p class="lede">RecallFlow brings one saved article back on a date you can see and control.</p>
+  <div class="loop" aria-label="RecallFlow product loop">
+    <span>Save</span><span aria-hidden="true">→</span><span>Wait</span><span aria-hidden="true">→</span><span>Resurface</span><span aria-hidden="true">→</span><span>Decide</span>
+  </div>
+  <div class="pilot-entry">
+    <h2>Closed pilot</h2>
+    <p>Enter your invitation code. RecallFlow does not ask for your name or email.</p>
+    {% if error %}<p class="message message-error" role="alert">{{ error }}</p>{% endif %}
+    <form method="post" action="/session" class="stack-form">
+      <input type="hidden" name="csrf_token" value="{{ login_csrf }}">
+      <input id="timezone-name" type="hidden" name="timezone_name" value="UTC">
+      <label for="access-code">Access code</label>
+      <input id="access-code" name="access_code" type="password" minlength="16" maxlength="256" autocomplete="one-time-code" required>
+      <button class="button" type="submit">Enter RecallFlow</button>
+    </form>
+  </div>
+</section>
+<script>
+  document.getElementById("timezone-name").value = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+</script>
+{% endblock %}

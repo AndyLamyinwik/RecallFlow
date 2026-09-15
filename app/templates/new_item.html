@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Save an article — RecallFlow{% endblock %}
+
+{% block content %}
+<section class="content-section narrow-section">
+  <p class="eyebrow">Add one useful thing</p>
+  <h1 class="page-title">Save an article</h1>
+  <p class="lede compact-lede">RecallFlow accepts one public HTML article at a time. It will return on the date you choose.</p>
+
+  {% if error %}<p class="message message-error" role="alert">{{ error }}</p>{% endif %}
+
+  <form method="post" action="/items" class="stack-form card-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+    <label for="url">Public article URL</label>
+    <input id="url" name="url" type="url" maxlength="2048" value="{{ form.url }}" placeholder="https://example.com/article" required>
+
+    <fieldset>
+      <legend>Why are you saving it?</legend>
+      <label class="choice"><input type="radio" name="intent" value="READ" {% if form.intent == "READ" %}checked{% endif %}> Read later</label>
+      <label class="choice"><input type="radio" name="intent" value="LEARN" {% if form.intent == "LEARN" %}checked{% endif %}> Learn from it</label>
+    </fieldset>
+
+    <label for="revisit-on">Bring it back on</label>
+    <input id="revisit-on" name="revisit_on" type="date" value="{{ form.revisit_on }}" required>
+    <p class="field-hint">Seven days is only the first default, not a validated ideal.</p>
+
+    <label for="why-saved-note">Optional note</label>
+    <textarea id="why-saved-note" name="why_saved_note" maxlength="500" rows="3" placeholder="Why might this matter later?">{{ form.why_saved_note }}</textarea>
+
+    <div class="form-actions">
+      <button class="button" type="submit">Save article</button>
+      <a class="text-link" href="/items">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

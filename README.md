@@ -1,8 +1,25 @@
 # RecallFlow
 
-RecallFlow is a small, non-AI web app that brings one saved article back on a transparent future date. The user can then choose **Open**, **Later**, or **Dismiss** without being shown an overdue queue or pressured to clear a backlog.
+> A rule-based saved-content resurfacing workflow for helping people revisit useful knowledge later.
+
+## Product case study
+
+**Problem.** People save useful knowledge but often fail to reconnect with it later.
+
+**Product.** RecallFlow resurfaces previously saved knowledge on a transparent future date, without presenting an overdue queue or pressuring the user to clear a backlog.
+
+**Current V1.** The non-AI release establishes a deterministic, rule-based baseline built around three clear decisions: **Open**, **Later**, and **Dismiss**.
+
+**Why non-AI first.** V1 deliberately establishes a deterministic baseline before testing whether AI creates incremental value. This keeps the core workflow explainable and gives future experiments a clear comparison point.
 
 This repository is a closed-pilot V1. Its product rules and extraction thresholds are provisional; it does not claim validated retention, learning, or AI results.
+
+## Product Documentation
+
+- [User research](docs/user-research.md)
+- [Product requirements](docs/PRD.md)
+- [User flow](docs/user-flow.md)
+- [Architecture](docs/architecture.md)
 
 ## What the current V1 does
 
@@ -27,7 +44,7 @@ The current V1 does **not** include:
 - deployment configuration or a hosted release
 - claims that the product hypotheses or `v1` thresholds have been validated
 
-`OPENAI_API_KEY` and `LLM_MODEL` remain reserved configuration fields and are not required by the current non-AI app. The architecture documents describe both implemented V1 behavior and possible later phases; planned AI/Recall sections are not current product functionality.
+Future AI and Recall design remains in the product and architecture documentation only; those planned sections are not current product functionality.
 
 ## Local setup
 

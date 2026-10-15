@@ -1,74 +1,6 @@
 # RecallFlow
 
-[简体中文](#简体中文介绍) · [English](#product-case-study)
-
-## 简体中文介绍
-
-**收藏之后，也能在合适的时候重新遇见。**
-
-我们常常保存有用的文章，却很少再回去看。RecallFlow 是一个帮助你回访已收藏知识的小工具：保存文章链接，设定一个回访日期，到期后回到应用，就能看到文章卡片，再决定现在打开、过几天再看，还是不再提醒。
-
-当前 V1 使用透明、可预测的规则，围绕 **Open / Later / Dismiss** 完成核心流程。先建立一个确定性的基础版本，再评估 AI 是否能带来额外价值。
-
-### 使用入口在哪？
-
-当前提供的是可在本地运行的源码版本，尚无在线演示站点。按下面的步骤启动后，在浏览器打开 **[http://127.0.0.1:8000](http://127.0.0.1:8000)** 即可进入。界面按钮目前为英文，下方附有中文说明。
-
-### 本地快速开始（Windows PowerShell）
-
-先准备好 Python 3.11 或更新版本和 Git，在准备存放项目的目录打开 PowerShell：
-
-```powershell
-git clone https://github.com/AndyLamyinwik/RecallFlow.git
-cd RecallFlow
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-Copy-Item .env.example .env
-```
-
-用文本编辑器打开 `.env`，设置两个值：
-
-- `APP_SECRET`：自行生成的随机密钥，建议至少 32 个字符。
-- `ACCESS_CODES`：自行生成的随机邀请码，长度为 16–256 个字符；登录时输入这个邀请码。
-
-可用下面的命令生成一个随机值，执行两次，分别用于密钥和邀请码。保留其余默认配置即可；`.env` 和邀请码请只保存在本地。
-
-```powershell
-.\.venv\Scripts\python.exe -c "import secrets; print(secrets.token_urlsafe(32))"
-```
-
-然后启动应用：
-
-```powershell
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
-```
-
-保持这个终端运行，在浏览器打开上面的本地入口。完整的配置和安全说明见下方 [Local setup](#local-setup)。
-
-### 怎么使用？
-
-1. **进入应用**：在首页输入 `.env` 中设置的 `ACCESS_CODES` 邀请码，点击 **Enter RecallFlow**。
-2. **保存文章**：进入 **Save an article**（`/items/new`），粘贴公开文章链接，选择保存用途和回访日期，也可以写一句收藏原因，点击 **Save article**。
-3. **到期回来查看**：打开 **Saved items**（`/items`），查看已保存文章和到期卡片。每个本地自然日最多选出一篇到期文章；需要回到这个页面查看，目前没有邮件或消息推送。
-4. **决定下一步**：在卡片上选择下面的操作。
-
-| 界面操作 | 含义 |
-| --- | --- |
-| **Open** | 检查原文链接可达后跳转到原文；这不代表已经读完。 |
-| **Later** | 延后 3 天、7 天，或选择一个未来日期。 |
-| **Dismiss** | 不再让这篇文章浮现，文章仍保留在列表中；30 秒内可点击 **Undo Dismiss** 撤销。 |
-| **Pause / Resume resurfacing** | 暂停或恢复文章浮现，保留已保存文章和原回访日期。 |
-
-点击列表中的文章可进入详情页。未被 Dismiss 的文章可以修改回访日期；若卡片正在等待处理，日期会暂时锁定。详情页也支持永久删除文章。
-
-### 产品文档
-
-- [用户研究与问题发现](docs/user-research.md)
-- [产品需求（PRD）](docs/PRD.md)
-- [用户流程](docs/user-flow.md)
-- [系统架构](docs/architecture.md)
-
----
+[English](#product-case-study) · [繁體中文](#繁體中文介紹) · [简体中文](#简体中文介绍)
 
 > A rule-based saved-content resurfacing workflow for helping people revisit useful knowledge later.
 
@@ -170,3 +102,139 @@ python -m pytest
 - SQLite is intentionally limited to a single application instance.
 - There is no AI, Recall, evaluation export, deployment setup, or hosted environment in this release.
 - Product hypotheses remain unvalidated until a later evaluation phase.
+
+---
+
+## 繁體中文介紹
+
+**收藏之後，也能在合適的時候重新遇見。**
+
+我們常常儲存有用的文章，卻很少再回去看。RecallFlow 是一個幫助你回訪已收藏知識的小工具：儲存文章連結，設定一個回訪日期，到期後回到應用程式，就能看到文章卡片，再決定現在開啟、過幾天再看，還是不再提醒。
+
+目前 V1 使用透明、可預測的規則，圍繞 **Open / Later / Dismiss** 完成核心流程。先建立一個確定性的基礎版本，再評估 AI 是否能帶來額外價值。
+
+### 使用入口在哪？
+
+目前提供的是可在本機執行的原始碼版本，尚無線上示範網站。按照下列步驟啟動後，在瀏覽器開啟 **[http://127.0.0.1:8000](http://127.0.0.1:8000)** 即可進入。介面按鈕目前為英文，下方附有中文說明。
+
+### 本機快速開始（Windows PowerShell）
+
+先準備好 Python 3.11 或更新版本和 Git，在準備存放專案的目錄開啟 PowerShell：
+
+```powershell
+git clone https://github.com/AndyLamyinwik/RecallFlow.git
+cd RecallFlow
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+Copy-Item .env.example .env
+```
+
+用文字編輯器開啟 `.env`，設定兩個值：
+
+- `APP_SECRET`：自行產生的隨機金鑰，建議至少 32 個字元。
+- `ACCESS_CODES`：自行產生的隨機邀請碼，長度為 16–256 個字元；登入時輸入這個邀請碼。
+
+可用下列指令產生一個隨機值，執行兩次，分別用於金鑰和邀請碼。保留其餘預設設定即可；`.env` 和邀請碼請只儲存在本機。
+
+```powershell
+.\.venv\Scripts\python.exe -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+然後啟動應用程式：
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
+```
+
+保持這個終端機執行，在瀏覽器開啟上面的本機入口。完整的設定和安全說明請參閱 [Local setup](#local-setup)。
+
+### 怎麼使用？
+
+1. **進入應用程式**：在首頁輸入 `.env` 中設定的 `ACCESS_CODES` 邀請碼，點選 **Enter RecallFlow**。
+2. **儲存文章**：進入 **Save an article**（`/items/new`），貼上公開文章連結，選擇儲存用途和回訪日期，也可以寫一句收藏原因，點選 **Save article**。
+3. **到期回來查看**：開啟 **Saved items**（`/items`），查看已儲存文章和到期卡片。以使用者時區計算，每天最多選出一篇到期文章；需要回到這個頁面查看，目前沒有電子郵件或訊息推播。
+4. **決定下一步**：在卡片上選擇下列操作。
+
+| 介面操作 | 含義 |
+| --- | --- |
+| **Open** | 檢查原文連結可連線後跳轉至原文；這不代表已經讀完。 |
+| **Later** | 延後 3 天、7 天，或選擇一個未來日期。 |
+| **Dismiss** | 不再讓這篇文章浮現，文章仍保留在清單中；30 秒內可點選 **Undo Dismiss** 復原。 |
+| **Pause / Resume resurfacing** | 暫停或恢復文章浮現，保留已儲存文章和原回訪日期。 |
+
+點選清單中的文章可進入詳細頁面。未被 Dismiss 的文章可以修改回訪日期；若卡片正在等待處理，日期會暫時鎖定。詳細頁面也支援永久刪除文章。
+
+### 產品文件
+
+- [使用者研究與問題發現](docs/user-research.md)
+- [產品需求（PRD）](docs/PRD.md)
+- [使用者流程](docs/user-flow.md)
+- [系統架構](docs/architecture.md)
+
+---
+
+## 简体中文介绍
+
+**收藏之后，也能在合适的时候重新遇见。**
+
+我们常常保存有用的文章，却很少再回去看。RecallFlow 是一个帮助你回访已收藏知识的小工具：保存文章链接，设定一个回访日期，到期后回到应用，就能看到文章卡片，再决定现在打开、过几天再看，还是不再提醒。
+
+当前 V1 使用透明、可预测的规则，围绕 **Open / Later / Dismiss** 完成核心流程。先建立一个确定性的基础版本，再评估 AI 是否能带来额外价值。
+
+### 使用入口在哪？
+
+当前提供的是可在本地运行的源码版本，尚无在线演示站点。按下面的步骤启动后，在浏览器打开 **[http://127.0.0.1:8000](http://127.0.0.1:8000)** 即可进入。界面按钮目前为英文，下方附有中文说明。
+
+### 本地快速开始（Windows PowerShell）
+
+先准备好 Python 3.11 或更新版本和 Git，在准备存放项目的目录打开 PowerShell：
+
+```powershell
+git clone https://github.com/AndyLamyinwik/RecallFlow.git
+cd RecallFlow
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+Copy-Item .env.example .env
+```
+
+用文本编辑器打开 `.env`，设置两个值：
+
+- `APP_SECRET`：自行生成的随机密钥，建议至少 32 个字符。
+- `ACCESS_CODES`：自行生成的随机邀请码，长度为 16–256 个字符；登录时输入这个邀请码。
+
+可用下面的命令生成一个随机值，执行两次，分别用于密钥和邀请码。保留其余默认配置即可；`.env` 和邀请码请只保存在本地。
+
+```powershell
+.\.venv\Scripts\python.exe -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+然后启动应用：
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
+```
+
+保持这个终端运行，在浏览器打开上面的本地入口。完整的配置和安全说明见 [Local setup](#local-setup)。
+
+### 怎么使用？
+
+1. **进入应用**：在首页输入 `.env` 中设置的 `ACCESS_CODES` 邀请码，点击 **Enter RecallFlow**。
+2. **保存文章**：进入 **Save an article**（`/items/new`），粘贴公开文章链接，选择保存用途和回访日期，也可以写一句收藏原因，点击 **Save article**。
+3. **到期回来查看**：打开 **Saved items**（`/items`），查看已保存文章和到期卡片。每个本地自然日最多选出一篇到期文章；需要回到这个页面查看，目前没有邮件或消息推送。
+4. **决定下一步**：在卡片上选择下面的操作。
+
+| 界面操作 | 含义 |
+| --- | --- |
+| **Open** | 检查原文链接可达后跳转到原文；这不代表已经读完。 |
+| **Later** | 延后 3 天、7 天，或选择一个未来日期。 |
+| **Dismiss** | 不再让这篇文章浮现，文章仍保留在列表中；30 秒内可点击 **Undo Dismiss** 撤销。 |
+| **Pause / Resume resurfacing** | 暂停或恢复文章浮现，保留已保存文章和原回访日期。 |
+
+点击列表中的文章可进入详情页。未被 Dismiss 的文章可以修改回访日期；若卡片正在等待处理，日期会暂时锁定。详情页也支持永久删除文章。
+
+### 产品文档
+
+- [用户研究与问题发现](docs/user-research.md)
+- [产品需求（PRD）](docs/PRD.md)
+- [用户流程](docs/user-flow.md)
+- [系统架构](docs/architecture.md)

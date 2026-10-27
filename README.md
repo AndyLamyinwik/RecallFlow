@@ -16,6 +16,18 @@
 
 This repository is a closed-pilot V1. Its product rules and extraction thresholds are provisional; it does not claim validated retention, learning, or AI results.
 
+## Demo and evaluation
+
+[![Watch the 82-second local demo](docs/media/demo-poster.png)](docs/media/recallflow-demo.mp4)
+
+[Watch the 82-second demo](docs/media/recallflow-demo.mp4): save an article and date, see a due card, choose Open / Later / Dismiss, undo a dismissal, and pause/resume. Three separate demo accounts preserve the one-new-card-per-user-local-day rule. The recording uses the actual browser UI with synthetic articles and explicitly mocked extraction/reachability.
+
+- [Demo event analysis](reports/usage_analysis.md), [aggregate CSV](reports/usage_summary.csv), and [metric chart](reports/usage_metrics.svg): three defined metrics from a fixed UTC observation window, with operation/card deduplication.
+- [Internal automated walkthrough](reports/internal_walkthrough.md): actual scenario checks and event-count assertions, not recruited-user testing or human task times.
+- [Evaluation methodology](docs/evaluation-methodology.md) and [reproduction guide](docs/demo-walkthrough.md): definitions, limits, and commands.
+
+These scripted results demonstrate the workflow and analysis tooling; they do not establish usability with new users, retention, reading, or learning outcomes. A [human usability-test plan](docs/usability-test-plan.md) is available for a later study.
+
 ## Product Documentation
 
 - [User research](docs/user-research.md)
@@ -34,6 +46,7 @@ This repository is a closed-pilot V1. Its product rules and extraction threshold
 - Offers **Undo** for 30 seconds after Dismiss. A valid same-user Undo restores the item and its retained schedule; when the original card context is still current, it restores that card without creating a second impression.
 - Supports a user-wide **Pause resurfacing** control. Pause hides/closes any active card but preserves every saved item and revisit date. Resume clears the pause without rewriting dates or creating a duplicate card for an already-used daily slot.
 - Records the non-AI product events needed to audit the primary flow.
+- Records admitted save-operation starts and terminal outcomes with per-user operation IDs. Exact form retries replay the prior result; extraction fallback remains a successful save, with extraction status recorded separately.
 
 `source_opened` has a deliberately narrow meaning: RecallFlow completed a fresh safe-reachability check and issued an external navigation handoff. It does **not** mean the browser rendered the article or that the user read it.
 
@@ -86,6 +99,19 @@ Authenticated pages:
 python -m pytest
 ```
 
+## Reproduce the demo analysis
+
+Run these from the project root with the project virtual environment active. Use a new `*demo*.db` filename on each run; the fixture generator refuses to overwrite an existing database and never reads your `.env`.
+
+```bash
+python -m scripts.generate_demo_usage --database data/recallflow-usage-demo.db
+python scripts/analyze_usage.py --database data/recallflow-usage-demo.db --start 2026-10-26T00:00:00Z --end 2026-10-27T00:00:00Z --data-kind demo --output-dir reports
+```
+
+The demo clock is fixed to the observation date above. The analyzer also accepts an existing private pilot SQLite file with `--data-kind pilot` and your explicit UTC boundaries. It opens the input read-only and exports only aggregate counts. Older, uninstrumented saves cannot be reconstructed from saved-item counts.
+
+To record again, install the optional tools in `requirements-demo.txt` and follow the [recording guide](docs/demo-walkthrough.md). They are not product runtime dependencies.
+
 ## Security and privacy boundaries
 
 - Capture accepts public HTTP(S) article targets only and applies address, redirect, response-type, size, and timeout limits.
@@ -100,7 +126,7 @@ python -m pytest
 - The default HTTP transport validates the connected peer after connection rather than pinning the connection to the prevalidated DNS address. Strict DNS-rebinding prevention remains deployment hardening work.
 - Closed-pilot invitation codes are intentionally a narrow access boundary, not a broad-release authentication system.
 - SQLite is intentionally limited to a single application instance.
-- There is no AI, Recall, evaluation export, deployment setup, or hosted environment in this release.
+- There is no AI, Recall, deployment setup, or hosted environment in this release. Offline aggregate analytics are available; there is no in-app analytics dashboard.
 - Product hypotheses remain unvalidated until a later evaluation phase.
 
 ---
@@ -112,6 +138,14 @@ python -m pytest
 我們常常儲存有用的文章，卻很少再回去看。RecallFlow 是一個幫助你回訪已收藏知識的小工具：儲存文章連結，設定一個回訪日期，到期後回到應用程式，就能看到文章卡片，再決定現在開啟、過幾天再看，還是不再提醒。
 
 目前 V1 使用透明、可預測的規則，圍繞 **Open / Later / Dismiss** 完成核心流程。先建立一個確定性的基礎版本，再評估 AI 是否能帶來額外價值。
+
+### 演示與評估
+
+- [82 秒操作演示](docs/media/recallflow-demo.mp4)：保存文章與日期、到期卡片、Open／Later／Dismiss、Undo，以及暫停／恢復。
+- [示範事件分析報告](reports/usage_analysis.md)、[彙總 CSV](reports/usage_summary.csv) 與 [圖表](reports/usage_metrics.svg)：固定觀察期間，按操作與卡片去重。
+- [內部模擬走查紀錄](reports/internal_walkthrough.md) 與 [評估方法](docs/evaluation-methodology.md)：記錄實際自動化檢查與證據限制。
+
+影片使用三個獨立示範帳號、合成文章與模擬網路結果。這些是腳本情境，不能當作真人使用測試、留存或閱讀成效；[真人測試計畫](docs/usability-test-plan.md) 留待後續實施。
 
 ### 使用入口在哪？
 
@@ -180,6 +214,14 @@ Copy-Item .env.example .env
 我们常常保存有用的文章，却很少再回去看。RecallFlow 是一个帮助你回访已收藏知识的小工具：保存文章链接，设定一个回访日期，到期后回到应用，就能看到文章卡片，再决定现在打开、过几天再看，还是不再提醒。
 
 当前 V1 使用透明、可预测的规则，围绕 **Open / Later / Dismiss** 完成核心流程。先建立一个确定性的基础版本，再评估 AI 是否能带来额外价值。
+
+### 演示与评估
+
+- [82 秒操作演示](docs/media/recallflow-demo.mp4)：保存文章与日期、到期卡片、Open／Later／Dismiss、Undo，以及暂停／恢复。
+- [示范事件分析报告](reports/usage_analysis.md)、[汇总 CSV](reports/usage_summary.csv) 和 [图表](reports/usage_metrics.svg)：固定观察期间，按操作与卡片去重。
+- [内部模拟走查记录](reports/internal_walkthrough.md) 与 [评估方法](docs/evaluation-methodology.md)：记录实际自动化检查与证据限制。
+
+视频使用三个独立示范账号、合成文章和模拟网络结果。这些是脚本情境，不能当作真人使用测试、留存或阅读成效；[真人测试计划](docs/usability-test-plan.md) 留待后续实施。
 
 ### 使用入口在哪？
 

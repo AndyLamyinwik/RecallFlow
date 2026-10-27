@@ -1,0 +1,57 @@
+{
+  "data_kind": "demo",
+  "evaluation_type": "internal automated scenario walkthrough",
+  "human_participants": 0,
+  "network": "mocked extraction and reachability; local synthetic source",
+  "fixed_clock_utc": "2026-10-26T09:00:00+00:00",
+  "duration_seconds": 82.04,
+  "resolution": "1280x900",
+  "audio": "none; burned-in Traditional Chinese captions",
+  "chapters": [
+    {
+      "name": "open",
+      "duration_seconds": 34
+    },
+    {
+      "name": "later",
+      "duration_seconds": 16
+    },
+    {
+      "name": "dismiss",
+      "duration_seconds": 22
+    },
+    {
+      "name": "architecture",
+      "duration_seconds": 10
+    }
+  ],
+  "checks": [
+    {
+      "scenario": "open",
+      "result": "PASS",
+      "refresh_no_duplicate_impression": true
+    },
+    {
+      "scenario": "later",
+      "result": "PASS",
+      "refresh_no_duplicate_impression": true
+    },
+    {
+      "scenario": "dismiss",
+      "result": "PASS",
+      "refresh_no_duplicate_impression": true
+    }
+  ],
+  "event_counts": {
+    "capture_started": 3,
+    "capture_succeeded": 3,
+    "dismiss_undone": 1,
+    "dismissed": 1,
+    "later_confirmed": 1,
+    "open_attempt": 1,
+    "pause_disabled": 1,
+    "pause_enabled": 1,
+    "resurfacing_impression": 3,
+    "source_opened": 1
+  }
+}

@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title id="title">RecallFlow non-AI V1：從操作到事件，再到分析</title>
+  <desc id="desc">示範資料流程：瀏覽器送出操作至 FastAPI 路由，由擷取、浮現與操作服務寫入 SQLite。唯讀分析腳本輸出彙總 CSV、SVG 圖表與報告。每位使用者每天最多一張新卡片。Open 表示導覽交接，不代表已讀。保存成功不等於正文抽取成功；舊版未記錄的操作不能補回，沒有終態結果的指標為 N/A。</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2c6f70"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#173041" flood-opacity="0.07"/>
+    </filter>
+    <style>
+      text { font-family: "Segoe UI", "Microsoft JhengHei", "Noto Sans TC", sans-serif; fill: #173041; }
+      .eyebrow { font-size: 15px; font-weight: 700; letter-spacing: 2px; fill: #5a7077; }
+      .heading { font-size: 26px; font-weight: 700; }
+      .body { font-size: 20px; }
+      .small { font-size: 17px; fill: #536972; }
+      .mono { font-family: Consolas, "Segoe UI", monospace; font-size: 18px; }
+      .line { fill: none; stroke: #2c6f70; stroke-width: 3; marker-end: url(#arrow); }
+      .card { fill: #ffffff; stroke: #d5dedb; stroke-width: 1.5; filter: url(#shadow); }
+    </style>
+  </defs>
+
+  <rect width="1280" height="720" fill="#f4f3ee"/>
+  <rect x="0" y="0" width="1280" height="8" fill="#2c6f70"/>
+  <text x="50" y="44" class="eyebrow">RECALLFLOW / NON-AI V1</text>
+  <text x="50" y="91" font-size="36" font-weight="700">從操作到事件，再到分析</text>
+  <rect x="935" y="34" width="295" height="41" rx="20.5" fill="#2c6f70"/>
+  <text x="1082.5" y="61" text-anchor="middle" font-size="17" font-weight="700" style="fill:#ffffff">DEMO · SYNTHETIC DATA</text>
+  <text x="1230" y="103" text-anchor="end" class="small">合成內容 · 本機腳本演示</text>
+
+  <rect x="50" y="155" width="205" height="172" rx="16" class="card"/>
+  <text x="72" y="196" class="heading">瀏覽器</text>
+  <text x="72" y="232" class="body">儲存文章與日期</text>
+  <text x="72" y="267" class="small">Open / Later</text>
+  <text x="72" y="294" class="small">Dismiss / Undo</text>
+
+  <rect x="300" y="155" width="230" height="172" rx="16" class="card"/>
+  <text x="322" y="196" class="heading">FastAPI</text>
+  <text x="322" y="232" class="body">既有網頁路由</text>
+  <text x="322" y="267" class="small">身分與擁有權檢查</text>
+  <text x="322" y="294" class="small">CSRF / 冪等處理</text>
+
+  <rect x="575" y="155" width="280" height="172" rx="16" class="card"/>
+  <text x="597" y="196" class="heading">既有服務</text>
+  <text x="597" y="232" class="body">Capture · 儲存</text>
+  <text x="597" y="263" class="body">Resurfacing · 排程</text>
+  <text x="597" y="294" class="body">Actions · 狀態流轉</text>
+
+  <rect x="900" y="140" width="330" height="202" rx="16" class="card"/>
+  <rect x="900" y="140" width="330" height="56" rx="16" fill="#e0eeea"/>
+  <rect x="900" y="176" width="330" height="20" fill="#e0eeea"/>
+  <text x="922" y="178" class="heading">SQLite</text>
+  <text x="922" y="230" class="mono">SavedItem</text>
+  <text x="1199" y="230" text-anchor="end" class="small">文章／日期</text>
+  <text x="922" y="272" class="mono">ResurfacingEvent</text>
+  <text x="1199" y="272" text-anchor="end" class="small">卡片</text>
+  <text x="922" y="314" class="mono">ActionEvent</text>
+  <text x="1199" y="314" text-anchor="end" class="small">操作事件</text>
+
+  <path d="M 255 241 H 296" class="line"/>
+  <path d="M 530 241 H 571" class="line"/>
+  <path d="M 855 241 H 896" class="line"/>
+
+  <rect x="50" y="393" width="455" height="167" rx="16" fill="#e8edeb"/>
+  <text x="72" y="432" font-size="21" font-weight="700">保留清楚的產品邊界</text>
+  <text x="72" y="472" class="body">每位使用者每日最多一張新卡片</text>
+  <text x="72" y="501" class="small">依使用者時區計算</text>
+  <text x="72" y="536" class="body">Open = 導覽交接 ≠ 已閱讀</text>
+
+  <rect x="550" y="415" width="300" height="145" rx="16" class="card"/>
+  <text x="572" y="455" class="heading">彙總輸出</text>
+  <text x="572" y="492" class="body">CSV · SVG 圖表</text>
+  <text x="572" y="527" class="body">usage_analysis.md</text>
+
+  <rect x="900" y="415" width="330" height="145" rx="16" class="card"/>
+  <text x="922" y="455" class="heading">唯讀分析</text>
+  <text x="922" y="492" class="mono">scripts/analyze_usage.py</text>
+  <text x="922" y="527" class="small">關聯 ID 去重 · 固定觀察期間</text>
+  <path d="M 1065 342 V 410" class="line"/>
+  <text x="1080" y="382" class="small">唯讀快照</text>
+  <path d="M 900 488 H 855" class="line"/>
+
+  <rect x="50" y="605" width="1180" height="77" rx="13" fill="#fff9e9" stroke="#dfd3b1"/>
+  <text x="72" y="636" font-size="20" font-weight="700">量測口徑：保存成功 ≠ 正文抽取成功</text>
+  <text x="72" y="664" font-size="18" style="fill:#685b3b">新事件不能補回舊版未記錄的操作；沒有終態結果時為 N/A。示範事件不代表真人成效。</text>
+</svg>

@@ -3,18 +3,27 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
+from hashlib import sha256
+import hmac
+import json
 from math import ceil
 from typing import Annotated
+from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from pydantic import ValidationError
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.config import Settings
 from app.models import (
+    ActionActor,
+    ActionEvent,
+    ActionEventName,
     Intent,
     ResurfacingEvent,
     ResurfacingState,
@@ -335,15 +344,14 @@ def create_web_router(
                         local_today=selection.local_today,
                         timezone_name=user.timezone,
                     )
-            elif (
-                not resurfacing_paused
-                and notice in {"open-failed", "dismiss-undone"}
-                and event_id
-            ):
-                retry_event = events.get_owned_resurfacing_event(
+            elif not resurfacing_paused:
+                # The daily limit concerns selecting a NEW card. Keep today's
+                # already-shown, unresolved card actionable across navigation or
+                # reload without another mount or impression event.
+                retry_event = events.get_daily_event(
                     database,
                     user_id=claims.user_id,
-                    resurfacing_event_id=event_id,
+                    local_date_slot=selection.local_today,
                 )
                 if (
                     retry_event is not None
@@ -733,6 +741,7 @@ def create_web_router(
                     "revisit_on": default_date.isoformat(),
                     "why_saved_note": "",
                 },
+                "capture_operation_id": str(uuid4()),
                 "error": None,
             }
         )
@@ -746,6 +755,7 @@ def create_web_router(
         revisit_on: Annotated[str, Form()],
         why_saved_note: Annotated[str, Form()] = "",
         csrf_token: Annotated[str, Form()] = "",
+        capture_operation_id: Annotated[str, Form()] = "",
     ) -> Response:
         form = {
             "url": url,
@@ -759,6 +769,107 @@ def create_web_router(
                 return login_redirect()
             claims, _ = principal
             require_csrf(claims, csrf_token)
+
+            # One admitted form submission is one operation. Legacy clients that
+            # omit the field still work, but need a supplied ID for retry replay.
+            try:
+                if capture_operation_id:
+                    if len(capture_operation_id) != 36:
+                        raise ValueError
+                    operation_id = str(UUID(capture_operation_id))
+                else:
+                    operation_id = str(uuid4())
+            except ValueError as exc:
+                raise HTTPException(status_code=422, detail="Invalid capture operation") from exc
+            fingerprint = hmac.new(
+                settings.app_secret.encode(),
+                ("capture-input-v1:" + claims.user_id + ":" + json.dumps(
+                    form, sort_keys=True, ensure_ascii=False, separators=(",", ":")
+                )).encode(),
+                sha256,
+            ).hexdigest()
+            started_key = f"capture:{operation_id}:started"
+
+            def failed_form() -> Response:
+                context = authenticated_context(claims)
+                context.update(
+                    {
+                        "form": form,
+                        # An edited resubmission is a new intentional operation.
+                        "capture_operation_id": str(uuid4()),
+                        "error": "We could not save that article. Check the public URL and revisit date.",
+                    }
+                )
+                return templates.TemplateResponse(
+                    request=request, name="new_item.html", context=context, status_code=422
+                )
+
+            def replay(started: ActionEvent) -> Response:
+                if not hmac.compare_digest(
+                    str(started.properties.get("input_fingerprint", "")), fingerprint
+                ):
+                    raise HTTPException(status_code=409, detail="Capture operation was reused with different input")
+                terminal = database.scalar(
+                    select(ActionEvent).where(
+                        ActionEvent.user_id == claims.user_id,
+                        ActionEvent.correlation_id == operation_id,
+                        ActionEvent.event_name.in_((
+                            ActionEventName.CAPTURE_SUCCEEDED, ActionEventName.CAPTURE_FAILED
+                        )),
+                    )
+                )
+                if terminal is None:
+                    raise HTTPException(
+                        status_code=409,
+                        detail="Capture is in progress or incomplete; open a new form to try again",
+                    )
+                if terminal.event_name == ActionEventName.CAPTURE_FAILED:
+                    return failed_form()
+                if terminal.item_id is None or items.get(
+                    database, user_id=claims.user_id, item_id=terminal.item_id
+                ) is None:
+                    raise HTTPException(status_code=409, detail="Saved result is no longer available")
+                notice = "saved" if terminal.properties.get("created") else "duplicate"
+                return RedirectResponse(
+                    url=f"/items/{terminal.item_id}?notice={notice}", status_code=303
+                )
+
+            existing = database.scalar(select(ActionEvent).where(
+                ActionEvent.user_id == claims.user_id,
+                ActionEvent.idempotency_key == started_key,
+            ))
+            if existing is not None:
+                return replay(existing)
+            # Commit the unique claim before network/extraction work. Concurrent
+            # retries cannot perform capture twice; a crash remains started-only
+            # rather than being reported as a known failure or success.
+            database.add(ActionEvent(
+                event_name=ActionEventName.CAPTURE_STARTED,
+                user_id=claims.user_id,
+                session_id=claims.session_id,
+                correlation_id=operation_id,
+                idempotency_key=started_key,
+                actor=ActionActor.USER,
+                occurred_at=current_utc(),
+                properties={"input_fingerprint": fingerprint, "telemetry_version": 1},
+            ))
+            try:
+                database.commit()
+            except IntegrityError:
+                database.rollback()
+                claimed = database.scalar(select(ActionEvent).where(
+                    ActionEvent.user_id == claims.user_id,
+                    ActionEvent.idempotency_key == started_key,
+                ))
+                if claimed is None:
+                    raise
+                return replay(claimed)
+            # Python's SQLite legacy transaction mode does not emit BEGIN for
+            # SELECT/SAVEPOINT. Start the real outer transaction explicitly so
+            # repository savepoints cannot commit an item independently of its
+            # terminal outcome; rollback must remove both together.
+            if database.get_bind().dialect.name == "sqlite":
+                database.connection().exec_driver_sql("BEGIN")
             try:
                 payload = CaptureInput(
                     url=url,
@@ -767,22 +878,37 @@ def create_web_router(
                     why_saved_note=why_saved_note or None,
                 )
                 result = capture_service.capture(database, user_id=claims.user_id, payload=payload)
+                events.create_action_event(
+                    database,
+                    event_name=ActionEventName.CAPTURE_SUCCEEDED,
+                    user_id=claims.user_id,
+                    session_id=claims.session_id,
+                    correlation_id=operation_id,
+                    idempotency_key=f"capture:{operation_id}:succeeded",
+                    actor=ActionActor.SYSTEM,
+                    item_id=result.item.id,
+                    occurred_at=current_utc(),
+                    properties={
+                        "created": result.created,
+                        "extraction_status": result.item.extraction_status.value,
+                    },
+                )
                 database.commit()
-            except (ValidationError, CaptureRejected):
+            except (ValidationError, CaptureRejected) as exc:
                 database.rollback()
-                context = authenticated_context(claims)
-                context.update(
-                    {
-                        "form": form,
-                        "error": "We could not save that article. Check the public URL and revisit date.",
-                    }
+                events.create_action_event(
+                    database,
+                    event_name=ActionEventName.CAPTURE_FAILED,
+                    user_id=claims.user_id,
+                    session_id=claims.session_id,
+                    correlation_id=operation_id,
+                    idempotency_key=f"capture:{operation_id}:failed",
+                    actor=ActionActor.SYSTEM,
+                    occurred_at=current_utc(),
+                    properties={"reason": exc.code.value if isinstance(exc, CaptureRejected) else "VALIDATION"},
                 )
-                return templates.TemplateResponse(
-                    request=request,
-                    name="new_item.html",
-                    context=context,
-                    status_code=422,
-                )
+                database.commit()
+                return failed_form()
 
         notice = "saved" if result.created else "duplicate"
         return RedirectResponse(url=f"/items/{result.item.id}?notice={notice}", status_code=303)

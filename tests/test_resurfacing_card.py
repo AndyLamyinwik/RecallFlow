@@ -22,6 +22,7 @@ from app.models import (
     ExtractionStatus,
     ResurfacingEvent,
     ResurfacingCloseReason,
+    ResurfacingOutcome,
     ResurfacingState,
     SavedItem,
     User,
@@ -231,7 +232,20 @@ def test_mount_is_once_only_and_refresh_does_not_show_a_replacement(card_ui) -> 
     refreshed = card_ui.client.get("/items")
 
     assert first_mount.status_code == repeated_mount.status_code == 204
-    assert "data-resurfacing-card" not in refreshed.text
+    assert refreshed.text.count("data-resurfacing-card") == 1
+    assert "data-resurfacing-mount" not in refreshed.text
+    card_markup = re.search(
+        r'<article class="resurfacing-card".*?</article>', refreshed.text, re.DOTALL
+    ).group(0)
+    assert f'/items/{selected.id}' in card_markup
+    assert "Useful article selected" in card_markup
+    assert "Useful article still-due" not in card_markup
+    event_path = path.removesuffix("/impression")
+    assert f'action="{event_path}/open"' in card_markup
+    assert f'action="{event_path}/later"' in card_markup
+    assert f'action="{event_path}/dismiss"' in card_markup
+    fieldset = re.search(r'<fieldset\s+class="resurfacing-actions"[^>]*>', card_markup).group(0)
+    assert 'aria-busy="false"' in fieldset and "disabled" not in fieldset
     with card_ui.factory() as database:
         event = database.scalar(select(ResurfacingEvent))
         assert event is not None
@@ -256,6 +270,42 @@ def test_mount_is_once_only_and_refresh_does_not_show_a_replacement(card_ui) -> 
             "selection_rule_version": "earliest_due_oldest_saved/v1",
             "eligible_count_snapshot": 2,
         }
+
+
+@pytest.mark.parametrize("condition", ["paused", "closed", "resolved", "dismissed-item"])
+def test_refresh_only_restores_active_unresolved_unpaused_card(card_ui, condition) -> None:
+    user = _login(card_ui)
+    with card_ui.factory() as database:
+        _create_due_item(database, user=user, suffix="no-longer-actionable")
+        _create_due_item(database, user=user, suffix="replacement-must-not-appear")
+        database.commit()
+    page = card_ui.client.get("/items")
+    mount = card_ui.client.post(_mount_path(page.text), data={"csrf_token": _csrf(page.text)})
+    assert mount.status_code == 204
+    with card_ui.factory() as database:
+        event = database.scalar(select(ResurfacingEvent))
+        if condition == "paused":
+            database.get(User, user.id).resurfacing_paused_at = NOW
+        elif condition == "closed":
+            event.state = ResurfacingState.CLOSED
+            event.closed_at = NOW
+            event.close_reason = ResurfacingCloseReason.PAUSED
+        elif condition == "resolved":
+            event.state = ResurfacingState.RESOLVED
+            event.outcome = ResurfacingOutcome.LATER_CONFIRMED
+            event.outcome_at = NOW
+            event.closed_at = NOW
+        else:
+            from app.models import SavedItemStatus
+
+            database.get(SavedItem, event.saved_item_id).status = SavedItemStatus.DISMISSED
+        database.commit()
+
+    refreshed = card_ui.client.get("/items")
+    assert "data-resurfacing-card" not in refreshed.text
+    with card_ui.factory() as database:
+        assert database.scalar(select(func.count()).select_from(ResurfacingEvent)) == 1
+        assert database.scalar(select(func.count()).select_from(ActionEvent)) == 1
 
 
 def test_mount_rejects_missing_foreign_and_stale_ids_without_disclosing_difference(card_ui) -> None:

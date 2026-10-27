@@ -12,6 +12,7 @@
 
   <form method="post" action="/items" class="stack-form card-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="capture_operation_id" value="{{ capture_operation_id }}">
 
     <label for="url">Public article URL</label>
     <input id="url" name="url" type="url" maxlength="2048" value="{{ form.url }}" placeholder="https://example.com/article" required>

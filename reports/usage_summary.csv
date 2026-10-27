@@ -1,0 +1,4 @@
+metric,numerator,denominator,rate_percent,data_kind,window_start_utc,window_end_utc
+capture_success_rate,5,6,83.3333,demo,2026-10-26T00:00:00Z,2026-10-27T00:00:00Z
+card_action_rate,3,3,100.0000,demo,2026-10-26T00:00:00Z,2026-10-27T00:00:00Z
+open_handoff_success_rate,1,2,50.0000,demo,2026-10-26T00:00:00Z,2026-10-27T00:00:00Z
